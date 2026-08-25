@@ -399,7 +399,7 @@ class NemoKernel(Kernel):
             return [pad + str(fact)]
         lines = []
         rule = trace.rule() or "rule"
-        assignment = trace.assignement() or {}
+        assignment = trace.assignment() or {}
         parts = ", ".join(f"{k} = {format_value(v)}" for k, v in assignment.items())
         lines.append(pad + f"[{rule}]" + (f"  ({parts})" if parts else ""))
         for sub in trace.subtraces() or []:

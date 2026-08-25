@@ -13,8 +13,9 @@
 # Re-run after a container rebuild or after reinstalling/upgrading pyzmq.
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VENV_PYTHON="${REPO_ROOT}/.venv/bin/python"
+PYTHON_TAG="$("${VENV_PYTHON}" -c 'import sys; print(f"python{sys.version_info.major}.{sys.version_info.minor}")')"
 
 # Already fine?
 if "${VENV_PYTHON}" -c 'import zmq' >/dev/null 2>&1; then
@@ -50,8 +51,8 @@ fi
 echo "using libstdc++ from: ${LIBDIR}"
 
 # Embed the directory into the pyzmq shared libraries.
-for so in "${REPO_ROOT}"/.venv/lib/python3.13/site-packages/pyzmq.libs/*.so* \
-          "${REPO_ROOT}"/.venv/lib/python3.13/site-packages/zmq/backend/cython/_zmq*.so
+for so in "${REPO_ROOT}"/.venv/lib/"${PYTHON_TAG}"/site-packages/pyzmq.libs/*.so* \
+          "${REPO_ROOT}"/.venv/lib/"${PYTHON_TAG}"/site-packages/zmq/backend/cython/_zmq*.so
 do
     [ -f "${so}" ] || continue
     patchelf --add-rpath "${LIBDIR}" "${so}"

@@ -9,6 +9,8 @@ on:
 jobs:
   build-nmo-python:
     name: Build nmo-python (${{ matrix.target }})
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -70,6 +72,8 @@ jobs:
   build-nemo-jupyter:
     name: Build nemo-jupyter package
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
 
     steps:
       - name: Check out repository
