@@ -1,8 +1,10 @@
 {
   "name": "nemo-jupyter",
   "build": {
-    "dockerfile": "Dockerfile"
+    "dockerfile": "Dockerfile",
+    "options": ["--platform=linux/amd64"]
   },
+  "runArgs": ["--platform=linux/amd64"],
   "postCreateCommand": "bash .devcontainer/postCreateCommand.sh",
   "postStartCommand": "bash .devcontainer/start-jupyterlab.sh",
   "forwardPorts": [8888],
