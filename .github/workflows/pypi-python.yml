@@ -1,0 +1,98 @@
+name: Publish nemo-python to PyPI
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+
+jobs:
+  build-nemo-python:
+    name: Build nemo-python (${{ matrix.target }})
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            rustflags: ""
+          # aarch64-unknown-linux-gnu intentionally omitted for now;
+          # current upstream build fails in aws-lc-sys on this target.
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            rustflags: "-C link-arg=-undefined -C link-arg=dynamic_lookup"
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            rustflags: "-C link-arg=-undefined -C link-arg=dynamic_lookup"
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            rustflags: ""
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Check out nemo sources for nmo-python
+        uses: actions/checkout@v4
+        with:
+          repository: wiki3-ai/nemo
+          path: nemo-upstream
+
+      # The upstream project is distributed as `nmo-python`, but the PyPI
+      # project reserved for these wheels is `nemo-python`. Rename the
+      # distribution and pin the module name so the import name stays
+      # `nmo_python`, which matches the cdylib built by cargo.
+      - name: Set distribution name to nemo-python
+        shell: bash
+        run: |
+          cd nemo-upstream/nemo-python
+          awk '
+            /^name = "nmo-python"$/ { print "name = \"nemo-python\""; next }
+            /^\[tool\.maturin\]$/ { print; print "module-name = \"nmo_python\""; next }
+            { print }
+          ' pyproject.toml > pyproject.toml.new
+          mv pyproject.toml.new pyproject.toml
+          cat pyproject.toml
+
+      - name: Build wheels with maturin
+        uses: PyO3/maturin-action@v1
+        env:
+          # On macOS the extension module cannot be linked against libpython,
+          # so it must be linked with `-undefined dynamic_lookup`. Upstream
+          # sets these flags in `nemo-upstream/.cargo/config.toml`, but cargo
+          # only discovers config files relative to its working directory,
+          # which here is this repository's root rather than the checked out
+          # upstream sources. Pass them explicitly instead.
+          RUSTFLAGS: ${{ matrix.rustflags }}
+        with:
+          command: build
+          target: ${{ matrix.target }}
+          args: --release --locked --manifest-path nemo-upstream/nemo-python/Cargo.toml --out dist --find-interpreter
+          manylinux: auto
+
+      - name: Upload wheel artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nemo-python-${{ matrix.target }}
+          path: dist/*.whl
+
+  publish-nemo-python:
+    name: Publish nemo-python to PyPI
+    needs: build-nemo-python
+    runs-on: ubuntu-22.04
+    environment: pypi
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Download all wheel artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: nemo-python-*
+          path: dist
+          merge-multiple: true
+
+      - name: Publish nemo-python wheels to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/

@@ -228,7 +228,12 @@ def _nemo_version() -> str:
     try:
         from importlib import metadata
 
-        return metadata.version("nmo-python")
+        for distribution in ("nemo-python", "nmo-python"):
+            try:
+                return metadata.version(distribution)
+            except metadata.PackageNotFoundError:
+                continue
+        return "unknown"
     except Exception:
         return "unknown"
 

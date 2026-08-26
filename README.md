@@ -7,8 +7,8 @@ program**, so facts and rules from earlier cells stay active in later
 cells. Every run re-reasons the accumulated program and prints the
 contents of every `@export`-ed predicate.
 
-The kernel is built on `ipykernel` and the Python bindings in
-`nmo-python` (the `nmo_python` module).
+The kernel is built on `ipykernel` and the Python bindings published on
+PyPI as `nemo-python` (the `nmo_python` module).
 
 ## Devcontainer
 
