@@ -7,7 +7,7 @@ name = "nemo-jupyter"
 version = "0.1.0"
 description = "Jupyter kernel and nbconvert exporter for the Nemo rule engine"
 requires-python = ">=3.9"
-dependencies = ["ipykernel>=6", "jupyter_client>=7", "nmo-python"]
+dependencies = ["ipykernel>=6", "jupyter_client>=7", "nemo-python"]
 
 [project.optional-dependencies]
 dev = ["pytest>=7", "nbconvert>=7", "jupyterlab>=4"]
