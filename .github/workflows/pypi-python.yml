@@ -48,6 +48,7 @@ jobs:
           cd nemo-upstream/nemo-python
           awk '
             /^name = "nmo-python"$/ { print "name = \"nemo-python\""; next }
+            /^module-name = / { next }
             /^\[tool\.maturin\]$/ { print; print "module-name = \"nmo_python\""; next }
             { print }
           ' pyproject.toml > pyproject.toml.new
